@@ -1,8 +1,8 @@
 require(RCurl); require(rjson); require(dplyr);
 require(lubridate); require(doMC); require(rvest);
-require(readr); library(RPostgreSQL); library(here)
+require(readr); library(RPostgreSQL); library(magrittr)
 
-setwd(here::here())
+setwd('~/R/Scripts/daily_nhl_updates')
 
 #Source all relevant scripts
 source('psql_config.r', echo = FALSE) #PSQL credentials
@@ -39,12 +39,12 @@ psql.connection <-
 #Append raw_pbp table
 fun.append_table(connection = psql.connection, 
                  table = raw_pbp, 
-                 values = df.PbP_output[[1]])
+                 values = df.raw_pbp[[1]])
 
 #Append roster table
 fun.append_table(connection = psql.connection, 
                  table = pbp_rosters, 
-                 values = df.PbP_output[[2]])
+                 values = df.raw_pbp[[2]])
 
 #Append game results
 fun.append_table(connection = psql.connection, 

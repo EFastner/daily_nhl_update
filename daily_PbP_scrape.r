@@ -3103,6 +3103,10 @@ ftable2df <- function(mydata) {
 ##This code written by Eric Fastner                                        #####
 ################################################################################
 
+#Assign Shapes for Corsi Shot Types
+v.corsi_events <- c(16, 17, 1, 0)
+names(v.corsi_events) <- c("SHOT", "GOAL", "MISS", "BLOCK")
+
 ds.date_compile <- function(season_start, startdate = paste0(season_start,"-09-01"), enddate = paste0(season_start+1, "-07-31")) {
   
   #Create the seasonID for dates selected
@@ -3150,7 +3154,7 @@ fun.postgres_connect <- function(db.name, db.host, db.user, db.password){
               password = db.password)
   
   #Clear the pasword entered above
-  rm(db.pw)
+  rm(db.password)
   
   return(db.con)
 }
@@ -3169,9 +3173,9 @@ fun.append_table <- function(connection, table, values){
 fun.update_PbP_tables <- function(Date = today() - 1) {
   #Assumes any dates before september denote a season that started in the previous year
   if(month(Date) > 9) {
-    season_start <- year(Date) - 1
-  } else {
     season_start <- year(Date)
+  } else {
+    season_start <- year(Date) - 1
   }
   
   #Scrape pbp and roster data
@@ -3182,3 +3186,23 @@ fun.update_PbP_tables <- function(Date = today() - 1) {
   return(list(df.PbP_output[[1]], df.PbP_output[[2]]))
 }
 
+ds.enhancedPBP <- function(rawdata, corsi_events = v.corsi_events) {
+  #DESCRIPTION - Add various additional columns to scraped PBP data
+  #ARGUMENTS - rawdata = a PBP data frame scraped with Manny Perry's dryscrape functions, v.corsi_events = a vector listing corsi events in names
+  #DEPENDENCIES - None
+  
+  #Add Dummy Column for Home Team
+  rawdata$is_home <- ifelse(rawdata$event_team == as.character(rawdata$home_team),1,0)
+  
+  #Add Columns for Game Minutes
+  rawdata$game_mins <- rawdata$game_seconds/60
+  
+  #Add side_coords to move all game events to one side of the ice, home on left & away on right
+  rawdata$side_coordsx <- ifelse(rawdata$is_home == 1, -abs(as.numeric(rawdata$coords_x)), abs(as.numeric(rawdata$coords_x)))
+  rawdata$side_coordsy <- ifelse((rawdata$is_home == 1 & as.numeric(rawdata$coords_x) > 0) | (rawdata$is_home == 0 & as.numeric(rawdata$coords_x) < 0), -as.numeric(rawdata$coords_y), as.numeric(rawdata$coords_y))
+  
+  #Add Dummy Column for Corsi
+  rawdata$is_corsi <- ifelse(rawdata$event_type %in% names(corsi_events), 1, 0)
+  
+  return(rawdata)
+}

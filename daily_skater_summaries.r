@@ -120,7 +120,7 @@ fun.skater_summary <- function(dataset) {
       summary.home_skaters[i,] %>% 
       select(player, team, season, game_id, G, A1, A2, SOG, BLK, PENT, PEND, FOW, FOL, CF_5v5, CA_5v5, GF_5v5, GA_5v5)
     
-    summary.home_skaters[i, "GS"] <- round(fun.gamescore(gs_cats[,4:16]),3)
+    summary.home_skaters[i, "GS"] <- round(fun.gamescore(gs_cats[,5:17]),3)
   }
   
   summary.away_skaters <- bind_rows(away_player_summary1, 
