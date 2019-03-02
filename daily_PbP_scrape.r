@@ -3123,6 +3123,11 @@ ds.date_compile <- function(season_start, startdate = paste0(season_start,"-09-0
              select(gameID) %>%
              arrange(gameID)
   
+  #Return NA if there are no games
+  if (nrow(df.game_numbers) == 0) {
+    return(NA)
+  }
+  
   list.game_items <- ds.compile_games(games = df.game_numbers$gameID, 
                                       season = seasonID)
   
@@ -3170,20 +3175,25 @@ fun.append_table <- function(connection, table, values){
                row.names = FALSE)
 }
 
-fun.update_PbP_tables <- function(Date = today() - 1) {
+fun.update_PbP_tables <- function(start_date = today() - 1, end_date = today() - 1) {
   #Assumes any dates before september denote a season that started in the previous year
-  if(month(Date) > 9) {
-    season_start <- year(Date)
+  if(month(start_date) > 9) {
+    season_start <- year(start_date)
   } else {
-    season_start <- year(Date) - 1
+    season_start <- year(start_date) - 1
   }
   
   #Scrape pbp and roster data
   df.PbP_output <- 
-    ds.date_compile(season_start = season_start, startdate = Date, enddate = Date)
+    ds.date_compile(season_start = season_start, startdate = start_date, enddate = end_date)
   
-  #Return raw pbp file for additional summaries
-  return(list(df.PbP_output[[1]], df.PbP_output[[2]]))
+  if(is.na(df.PbP_output)){
+    #Return NA if there were no games
+    return(NA)
+  }else {
+    #Return raw pbp file for additional summaries
+    return(list(df.PbP_output[[1]], df.PbP_output[[2]]))
+  }
 }
 
 ds.enhancedPBP <- function(rawdata, corsi_events = v.corsi_events) {
